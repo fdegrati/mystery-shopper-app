@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Reporte Mystery Shopper</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    h1 { color: #4F46E5; }
+    .header { border-bottom: 3px solid #4F46E5; padding-bottom: 20px; margin-bottom: 20px; }
+    .section { margin-bottom: 30px; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+    th { background-color: #4F46E5; color: white; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Reporte Mystery Shopper</h1>
+    <p><strong>Cliente:</strong> <%= cliente.nombre %></p>
+    <p><strong>Generado:</strong> <%= fechaGeneracion %></p>
+  </div>
+
+  <div class="section">
+    <h2>Resumen</h2>
+    <p><strong>Puntaje Promedio:</strong> <%= Math.round(resumen.promedioTotal) %>/100</p>
+    <p><strong>Total Evaluaciones:</strong> <%= resumen.totalEvaluaciones %></p>
+  </div>
+
+  <div class="section">
+    <h2>Evaluaciones</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Fecha</th>
+          <th>Local</th>
+          <th>Puntaje</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% asignaciones.forEach(a => { %>
+          <tr>
+            <td><%= new Date(a.created_at).toLocaleDateString('es-AR') %></td>
+            <td><%= a.local_nombre || 'N/A' %></td>
+            <td><%= a.scores ? Math.round(a.scores.puntajeTotal) : 'N/A' %></td>
+          </tr>
+        <% }); %>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="footer">
+    <p style="text-align: center; color: #666; font-size: 12px; margin-top: 40px;">
+      <%= organizacion.nombre %> - Reporte confidencial
+    </p>
+  </div>
+</body>
+</html>
