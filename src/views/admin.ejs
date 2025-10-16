@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel Admin - Mystery Shopper</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <style>
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+  </style>
+</head>
+<body class="bg-gray-50">
+  <header class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg">
+    <div class="container mx-auto px-4 py-6">
+      <h1 class="text-3xl font-bold">Mystery Shopper - Admin</h1>
+    </div>
+  </header>
+
+  <div class="container mx-auto px-4 py-8">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <p class="text-gray-500 text-sm font-medium">Encuestas</p>
+        <p class="text-3xl font-bold text-indigo-600 mt-2"><%= stats.totalEncuestas %></p>
+      </div>
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <p class="text-gray-500 text-sm font-medium">Formularios</p>
+        <p class="text-3xl font-bold text-purple-600 mt-2"><%= stats.totalFormularios %></p>
+      </div>
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <p class="text-gray-500 text-sm font-medium">Clientes</p>
+        <p class="text-3xl font-bold text-green-600 mt-2"><%= stats.totalClientes %></p>
+      </div>
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <p class="text-gray-500 text-sm font-medium">Asignaciones</p>
+        <p class="text-3xl font-bold text-orange-600 mt-2"><%= stats.totalAsignaciones %></p>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-md mb-8">
+      <div class="border-b border-gray-200">
+        <nav class="flex">
+          <button class="tab-btn px-6 py-4 text-sm font-medium border-b-2 border-indigo-600 text-indigo-600" data-tab="encuestas">Encuestas</button>
+          <button class="tab-btn px-6 py-4 text-sm font-medium border-b-2 border-transparent text-gray-500" data-tab="clientes">Clientes</button>
+          <button class="tab-btn px-6 py-4 text-sm font-medium border-b-2 border-transparent text-gray-500" data-tab="asignaciones">Asignaciones</button>
+        </nav>
+      </div>
+
+      <div id="tab-encuestas" class="tab-content active p-6">
+        <h2 class="text-2xl font-bold text-gray-800 mb-4">Encuestas</h2>
+        <div class="space-y-4">
+          <% encuestas.forEach(encuesta => { %>
+            <div class="border border-gray-200 rounded-lg p-4">
+              <h3 class="text-lg font-semibold"><%= encuesta.nombre %></h3>
+              <p class="text-sm text-gray-600"><%= encuesta.rubro %> - <%= encuesta.total_formularios %> formularios</p>
+            </div>
+          <% }); %>
+        </div>
+      </div>
+
+      <div id="tab-clientes" class="tab-content p-6">
+        <h2 class="text-2xl font-bold text-gray-800 mb-4">Clientes</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <% clientes.forEach(cliente => { %>
+            <div class="border border-gray-200 rounded-lg p-4">
+              <h3 class="font-bold"><%= cliente.nombre %></h3>
+              <p class="text-sm text-gray-600"><%= cliente.rubro %></p>
+              <p class="text-xs text-gray-500 mt-2"><%= cliente.total_asignaciones %> asignaciones</p>
+            </div>
+          <% }); %>
+        </div>
+      </div>
+
+      <div id="tab-asignaciones" class="tab-content p-6">
+        <h2 class="text-2xl font-bold text-gray-800 mb-4">Asignaciones</h2>
+        <p class="text-gray-600">Cargue asignaciones desde la API o cree nuevas.</p>
+        <div class="mt-4">
+          <p class="text-sm text-gray-500">Links de demostración:</p>
+          <p class="text-sm"><strong>Shopper:</strong> <%= baseUrl %>/s/demo-shopper-slug</p>
+          <p class="text-sm"><strong>Cliente:</strong> <%= baseUrl %>/c/demo-cliente-slug</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tab = btn.dataset.tab;
+        document.querySelectorAll('.tab-btn').forEach(b => {
+          b.classList.remove('border-indigo-600', 'text-indigo-600');
+          b.classList.add('border-transparent', 'text-gray-500');
+        });
+        btn.classList.remove('border-transparent', 'text-gray-500');
+        btn.classList.add('border-indigo-600', 'text-indigo-600');
+        
+        document.querySelectorAll('.tab-content').forEach(content => {
+          content.classList.remove('active');
+        });
+        document.getElementById('tab-' + tab).classList.add('active');
+      });
+    });
+  </script>
+</body>
+</html>
