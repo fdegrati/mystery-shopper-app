@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - <%= cliente.nombre %></title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body class="bg-gray-50">
+  <header class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg">
+    <div class="container mx-auto px-4 py-6">
+      <div class="flex justify-between items-center">
+        <div class="flex items-center space-x-4">
+          <% if (organizacion.logo_url) { %>
+            <img src="<%= organizacion.logo_url %>" alt="Logo" class="h-12 bg-white rounded p-1">
+          <% } %>
+          <% if (cliente.logo_url) { %>
+            <img src="<%= cliente.logo_url %>" alt="Logo" class="h-12 bg-white rounded p-1">
+          <% } %>
+          <div>
+            <h1 class="text-2xl font-bold"><%= cliente.nombre %></h1>
+            <p class="text-indigo-100 text-sm"><%= organizacion.nombre %></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="container mx-auto px-4 py-8">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <p class="text-gray-500 text-sm font-medium">Puntaje Promedio</p>
+        <p class="text-4xl font-bold text-indigo-600 mt-2"><%= Math.round(resumen.promedioTotal) %></p>
+        <p class="text-xs text-gray-400 mt-1">de 100</p>
+      </div>
+
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <p class="text-gray-500 text-sm font-medium">Evaluaciones</p>
+        <p class="text-4xl font-bold text-purple-600 mt-2"><%= asignaciones.length %></p>
+        <p class="text-xs text-gray-400 mt-1">completadas</p>
+      </div>
+
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <p class="text-gray-500 text-sm font-medium">Excelentes</p>
+        <p class="text-4xl font-bold text-green-600 mt-2"><%= resumen.distribucion.excelente %></p>
+        <p class="text-xs text-gray-400 mt-1">≥ 90 puntos</p>
+      </div>
+
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <p class="text-gray-500 text-sm font-medium">Necesitan Atención</p>
+        <p class="text-4xl font-bold text-red-600 mt-2"><%= resumen.distribucion.malo + resumen.distribucion.regular %></p>
+        <p class="text-xs text-gray-400 mt-1">< 70 puntos</p>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <h3 class="text-lg font-bold text-gray-800 mb-4">Promedio por Módulo</h3>
+        <canvas id="chartModulos" style="max-height: 300px;"></canvas>
+      </div>
+
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <h3 class="text-lg font-bold text-gray-800 mb-4">Distribución de Puntajes</h3>
+        <canvas id="chartDistribucion" style="max-height: 300px;"></canvas>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+      <div class="p-6 border-b border-gray-200">
+        <h3 class="text-xl font-bold text-gray-800">Evaluaciones Detalladas</h3>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fecha</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Local</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Evaluador</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Puntaje</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            <% asignaciones.forEach(asignacion => { %>
+              <tr class="hover:bg-gray-50">
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <%= new Date(asignacion.created_at).toLocaleDateString('es-AR') %>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <%= asignacion.local_nombre || 'N/A' %>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <%= asignacion.shopper_email %>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <% if (asignacion.scores) { %>
+                    <span class="text-2xl font-bold <%= asignacion.scores.puntajeTotal >= 90 ? 'text-green-600' : asignacion.scores.puntajeTotal >= 70 ? 'text-blue-600' : 'text-red-600' %>">
+                      <%= Math.round(asignacion.scores.puntajeTotal) %>
+                    </span>
+                    <span class="text-sm text-gray-400">/100</span>
+                  <% } else { %>
+                    <span class="text-gray-400">N/A</span>
+                  <% } %>
+                </td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const resumen = <%- JSON.stringify(resumen) %>;
+
+    const ctxModulos = document.getElementById('chartModulos').getContext('2d');
+    new Chart(ctxModulos, {
+      type: 'bar',
+      data: {
+        labels: resumen.promediosPorModulo.map(m => m.titulo),
+        datasets: [{
+          label: 'Promedio',
+          data: resumen.promediosPorModulo.map(m => m.promedio),
+          backgroundColor: 'rgba(79, 70, 229, 0.8)',
+          borderColor: 'rgba(79, 70, 229, 1)',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        scales: { y: { beginAtZero: true, max: 100 } },
+        plugins: { legend: { display: false } }
+      }
+    });
+
+    const ctxDistribucion = document.getElementById('chartDistribucion').getContext('2d');
+    new Chart(ctxDistribucion, {
+      type: 'doughnut',
+      data: {
+        labels: ['Excelente (≥90)', 'Bueno (70-89)', 'Regular (50-69)', 'Malo (<50)'],
+        datasets: [{
+          data: [
+            resumen.distribucion.excelente,
+            resumen.distribucion.bueno,
+            resumen.distribucion.regular,
+            resumen.distribucion.malo
+          ],
+          backgroundColor: [
+            'rgba(16, 185, 129, 0.8)',
+            'rgba(59, 130, 246, 0.8)',
+            'rgba(251, 191, 36, 0.8)',
+            'rgba(239, 68, 68, 0.8)'
+          ],
+          borderWidth: 2,
+          borderColor: '#fff'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: { legend: { position: 'bottom' } }
+      }
+    });
+  </script>
+</body>
+</html>
