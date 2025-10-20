@@ -60,7 +60,15 @@ exports.getShopperForm = (req, res) => {
       modulo.imagenes = db.prepare('SELECT * FROM media WHERE asignacion_id = ? AND modulo_id = ? ORDER BY created_at').all(asignacion.id, modulo.id);
     }
 
-    res.render('shopper', { asignacion, modulos, puedeEditar, baseUrl: process.env.APP_BASE_URL });
+     res.render('shopper', { 
+      asignacion, 
+      modulos, 
+      puedeEditar, 
+      baseUrl: process.env.APP_BASE_URL,
+      formulario_nombre: asignacion.formulario_nombre,
+      cliente_nombre: asignacion.cliente_nombre,
+      local_nombre: asignacion.local_nombre
+    });
   } catch (error) {
     console.error('Error en getShopperForm:', error);
     res.status(500).send('Error al cargar el formulario');
