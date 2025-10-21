@@ -497,31 +497,69 @@ async function cargarAsignaciones() {
     }
 
     async function verFormularios(encuestaId) {
-      const container = document.getElementById(`formularios-${encuestaId}`);
-      if (container.classList.contains('hidden')) {
-        try {
-          const response = await fetch(`/admin/formularios?encuestaId=${encuestaId}`);
-          const formularios = await response.json();
-          
-          container.innerHTML = formularios.map(f => `
-            <div class="bg-gray-50 p-3 rounded mb-2">
-              <div class="flex justify-between items-center">
-                <div>
-                  <p class="font-medium text-gray-800">${f.nombre}</p>
-                  <p class="text-xs text-gray-600">Versión ${f.version} - ${f.activo ? 'Activo' : 'Inactivo'}</p>
-                </div>
-              </div>
+  const container = document.getElementById(`formularios-${encuestaId}`);
+  if (container.classList.contains('hidden')) {
+    try {
+      const response = await fetch(`/admin/formularios?encuestaId=${encuestaId}`);
+      const formularios = await response.json();
+      
+      container.innerHTML = `
+        <div class="mb-3">
+          <button onclick="crearFormulario(${encuestaId})" class="bg-purple-600 text-white px-3 py-2 rounded text-sm hover:bg-purple-700">
+            <i class="fas fa-plus mr-1"></i> Crear Formulario
+          </button>
+        </div>
+      ` + formularios.map(f => `
+        <div class="bg-gray-50 p-3 rounded mb-2">
+          <div class="flex justify-between items-center">
+            <div>
+              <p class="font-medium text-gray-800">${f.nombre}</p>
+              <p class="text-xs text-gray-600">Versión ${f.version} - ${f.activo ? 'Activo' : 'Inactivo'}</p>
             </div>
-          `).join('');
-          
-          container.classList.remove('hidden');
-        } catch (error) {
-          console.error('Error:', error);
-        }
-      } else {
-        container.classList.add('hidden');
-      }
+          </div>
+        </div>
+      `).join('');
+      
+      container.classList.remove('hidden');
+    } catch (error) {
+      console.error('Error:', error);
     }
+  } else {
+    container.classList.add('hidden');
+  }
+}
+
+async function crearFormulario(encuestaId) {
+  const nombre = prompt('Nombre del formulario:');
+  if (!nombre) return;
+  
+  const descripcion = prompt('Descripción (opcional):') || '';
+  const codigo = isAdmin ? null : prompt('Código de administrador:');
+  
+  try {
+    const response = await fetch('/admin/formularios', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        encuestaId,
+        nombre,
+        descripcion,
+        adminCode: codigo
+      })
+    });
+    
+    if (response.ok) {
+      alert('Formulario creado correctamente');
+      document.getElementById(`formularios-${encuestaId}`).classList.add('hidden');
+      verFormularios(encuestaId);
+    } else {
+      const error = await response.json();
+      alert(error.message || 'Error al crear formulario');
+    }
+  } catch (error) {
+    alert('Error: ' + error.message);
+  }
+}
 
     async function cargarFormulariosSelect() {
       try {
