@@ -590,6 +590,10 @@ async function verModulos(formularioId) {
       ` + modulos.map(m => `
         <div class="bg-white p-3 rounded mb-2 border">
           <p class="font-medium text-gray-800">${m.titulo}</p>
+          <button onclick="verPreguntas(${m.id})" class="text-xs text-green-600 hover:text-green-800 mt-1">
+            <i class="fas fa-question-circle mr-1"></i> Ver Preguntas
+          </button>
+          <div id="preguntas-${m.id}" class="hidden"></div>
           <p class="text-xs text-gray-600">Peso: ${m.peso}%</p>
         </div>
       `).join('');
@@ -633,6 +637,83 @@ async function crearModulo(formularioId) {
     } else {
       const error = await response.json();
       alert(error.message || 'Error al crear módulo');
+    }
+  } catch (error) {
+    alert('Error: ' + error.message);
+  }
+}
+
+async function verPreguntas(moduloId) {
+  const container = document.getElementById(`preguntas-${moduloId}`);
+  if (!container) {
+    const moduloDiv = event.target.closest('.bg-white');
+    const preguntasDiv = document.createElement('div');
+    preguntasDiv.id = `preguntas-${moduloId}`;
+    preguntasDiv.className = 'mt-3 pl-4 border-l-2 border-green-200';
+    moduloDiv.appendChild(preguntasDiv);
+  }
+  
+  const preguntasContainer = document.getElementById(`preguntas-${moduloId}`);
+  
+  if (preguntasContainer.classList.contains('hidden')) {
+    try {
+      const response = await fetch(`/admin/preguntas?moduloId=${moduloId}`);
+      const preguntas = await response.json();
+      
+      preguntasContainer.innerHTML = `
+        <div class="mb-2">
+          <button onclick="crearPregunta(${moduloId})" class="bg-green-600 text-white px-2 py-1 rounded text-xs hover:bg-green-700">
+            <i class="fas fa-plus mr-1"></i> Crear Pregunta
+          </button>
+        </div>
+      ` + preguntas.map(p => `
+        <div class="bg-gray-50 p-2 rounded mb-2 text-xs">
+          <p class="font-medium">${p.enunciado}</p>
+          <p class="text-gray-600">Max puntos: ${p.max_points}</p>
+        </div>
+      `).join('');
+      
+      preguntasContainer.classList.remove('hidden');
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  } else {
+    preguntasContainer.classList.toggle('hidden');
+  }
+}
+
+async function crearPregunta(moduloId) {
+  const enunciado = prompt('Enunciado de la pregunta:');
+  if (!enunciado) return;
+  
+  const maxPoints = prompt('Puntos máximos (ej: 10):', '10');
+  if (!maxPoints) return;
+  
+  const codigo = isAdmin ? null : prompt('Código de administrador:');
+  
+  try {
+    const response = await fetch('/admin/preguntas', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        moduloId,
+        enunciado,
+        tipo: 'single_choice',
+        maxPoints: parseInt(maxPoints),
+        adminCode: codigo
+      })
+    });
+    
+    if (response.ok) {
+      const pregunta = await response.json();
+      alert('Pregunta creada. Ahora crea las opciones de respuesta.');
+      document.getElementById(`preguntas-${moduloId}`).classList.add('hidden');
+      verPreguntas(moduloId);
+      // Automáticamente abrir creación de opciones
+      setTimeout(() => crearOpcionesParaPregunta(pregunta.id), 500);
+    } else {
+      const error = await response.json();
+      alert(error.message || 'Error al crear pregunta');
     }
   } catch (error) {
     alert('Error: ' + error.message);
