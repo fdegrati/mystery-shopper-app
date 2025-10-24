@@ -720,6 +720,56 @@ async function crearPregunta(moduloId) {
   }
 }
 
+async function crearOpcionesParaPregunta(preguntaId) {
+  const opciones = [];
+  let continuar = true;
+  let numeroOpcion = 1;
+  
+  while (continuar) {
+    const texto = prompt(`Opción ${numeroOpcion} - Texto de la respuesta:`);
+    if (!texto) break;
+    
+    const puntos = prompt(`Opción ${numeroOpcion} - Puntos que otorga (0 si es incorrecta):`, '0');
+    if (puntos === null) break;
+    
+    opciones.push({
+      texto: texto,
+      puntos: parseInt(puntos)
+    });
+    
+    continuar = confirm('¿Agregar otra opción?');
+    numeroOpcion++;
+  }
+  
+  if (opciones.length === 0) {
+    alert('Debes crear al menos una opción');
+    return;
+  }
+  
+  const codigo = isAdmin ? null : prompt('Código de administrador:');
+  
+  try {
+    const response = await fetch('/admin/opciones', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        preguntaId,
+        opciones,
+        adminCode: codigo
+      })
+    });
+    
+    if (response.ok) {
+      alert(`${opciones.length} opciones creadas correctamente`);
+    } else {
+      const error = await response.json();
+      alert(error.message || 'Error al crear opciones');
+    }
+  } catch (error) {
+    alert('Error: ' + error.message);
+  }
+}
+
     async function cargarFormulariosSelect() {
       try {
         const response = await fetch('/admin/formularios');
